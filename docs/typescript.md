@@ -617,7 +617,10 @@ const stringBox = new Box("a package")
 
 ```ts
 class Location {
-  constructor(public x: number, public y: number) {}
+  constructor(
+    public x: number,
+    public y: number
+  ) {}
 }
 const loc = new Location(20, 40);
 
@@ -633,19 +636,23 @@ TypeScript 特定于类的扩展，可自动将实例字段设置为输入参数
 abstract class Animal {
   abstract getName(): string;
   printName() {
-    console.log("Hello, " + this.getName());
+   console.log("Hello, " + this.getName());
   }
 }
-class Dog extends Animal { getName(): { ... } }
+class Dog extends Animal {
+  getName(): { ... }
+}
 ```
 
 一个类可以被声明为不可实现，但可以在类型系统中被子类化。 class 成员也可以。
 
 ### 装饰器和属性
-<!--rehype:wrap-class=col-span-2-->
 
 ```ts
-import { Syncable, triggersSync, preferCache, required } from "mylib"
+import {
+  Syncable, triggersSync, preferCache,
+  required
+} from "mylib"
 
 @Syncable
 class User {
@@ -653,7 +660,9 @@ class User {
   save() { ... }
   @preferCache(false)
   get displayName() { ... }
-  update(@required info: Partial<User>) { ... }
+  update(@required info: Partial<User>) {
+    //...
+  }
 }
 ```
 
@@ -675,6 +684,21 @@ class MyClass {
 ```
 
 类可以声明索引签名，与其他对象类型的索引签名相同。
+
+### 在 forwardRef 上面声明泛型
+
+```ts
+export const Wrapper = forwardRef(
+  <T extends object>
+(
+  props: RootNodeProps<T>,
+  ref: React.LegacyRef<HTMLDivElement>
+) => {
+  return (
+    <div ref={ref}></div>
+  );
+}
+```
 
 实用程序类型
 ----
@@ -1289,6 +1313,20 @@ export interface ProgressProps extends React.DetailedHTMLProps<React.HTMLAttribu
 export const Progress: FC<PropsWithRef<ProgressProps>> = forwardRef<HTMLDivElement>(InternalProgress)
 ```
 
+### 组件 'as' 属性
+<!--rehype:wrap-class=col-span-3-->
+
+```tsx
+import React, { ElementType, ComponentPropsWithoutRef } from "react";
+
+export const Link = <T extends ElementType<any> = "a">(props: { as?: T; } & ComponentPropsWithoutRef<T>) => {
+  const Comp = props.as || "a";
+  return <Comp {...props}></Comp>;
+};
+```
+
+允许传入自定义 `React` 组件，或 `div`, `a` 标签
+
 各种各样的技巧
 ---
 
@@ -1324,6 +1362,22 @@ type A = keyof Arrayish;
 // type A = number
 ```
 
+### 两个数组合并成一个新类型
+<!--rehype:wrap-class=col-span-2 row-span-2-->
+
+```ts
+const named = ["aqua", "aquamarine", "azure"] as const;
+const hex = ["#00FFFF", "#7FFFD4", "#F0FFFF"] as const;
+
+type Colors = {
+  [key in (typeof named)[number]]: (typeof hex)[number];
+};
+// Colors = {
+//   aqua: "#00FFFF" | "#7FFFD4" | "#F0FFFF"; 
+//   .... 
+// }
+```
+
 ### 索引签名
 
 ```ts
@@ -1332,6 +1386,13 @@ interface NumberOrString {
   length: number;
   name: string;
 }
+```
+
+### 只读元组类型
+
+```ts
+const point = [3, 4] as const
+// type 'readonly [3, 4]'
 ```
 
 ### 从数组中提取类型
@@ -1345,15 +1406,8 @@ type PointDetail = Data[number];
 ```
 <!--rehype:className=wrap-text-->
 
-### 只读元组类型
-
-```ts
-const point = [3, 4] as const
-// type 'readonly [3, 4]'
-```
-
 ### satisfies
-<!--rehype:wrap-class=row-span-2-->
+<!--rehype:wrap-class=row-span-3-->
 
 `satisfies` 允许将验证表达式的类型与某种类型匹配，而无需更改该表达式的结果类型。
 
@@ -1392,7 +1446,7 @@ const redComponent = palette.red.at(0)
 <!--rehype:className=wrap-text-->
 
 ### 范型实例化表达式
-<!--rehype:wrap-class=row-span-2-->
+<!--rehype:wrap-class=row-span-3-->
 
 不使用的情况下：
 
@@ -1471,6 +1525,21 @@ type Age = typeof MyArray[number]["age"];
 
 type Age2 = Person["age"];
 // type Age2 = number
+```
+
+### 范型推导出列表字面量
+<!--rehype:wrap-class=col-span-2-->
+
+```ts
+const a = <T extends string>(t: T) => t;
+const b = <T extends number>(t: T) => t;
+const c = <T extends boolean>(t: T) => t;
+const d = a("a");  // const d: 'a'
+const e = a(1);    // const d: 1
+const f = a(true); // const d: true
+
+const g = <T extends string[]>(t: [...T]) => t;  // 这里t的类型用了一个展开运算
+const h = g(["111", "222"]);  // 类型变成["111", "222"]了
 ```
 
 .d.ts 模版
